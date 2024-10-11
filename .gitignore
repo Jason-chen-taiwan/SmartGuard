@@ -1,0 +1,8 @@
+.venv/
+ConFuzzius/
+echidna/
+eTainter_docker/
+mythril/
+result/
+securify2/
+.DS_Store/
