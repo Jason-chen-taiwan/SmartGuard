@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>solidity analyse</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+    <style>
+        .container {
+            margin-top: 20px;
+        }
+
+        .report {
+            margin-top: 20px;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .report-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; 
+        }
+
+        .report-header h2 {
+            margin: 0;
+        }
+
+        .report-header .btn {
+            margin-left: 10px; 
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h2>上傳檔案</h2>
+                <form id="uploadForm" onsubmit="uploadFile(event);">
+                    <input type="file" id="fileInput" name="file" class="form-control-file">
+                    <h2>挑選版本</h2>
+                    <select id="versionSelect" name="version">
+                        {% for version in versions %}
+                        <option>{{ version }}</option>
+                        {% endfor %}
+                    </select>
+                    <h2>選擇服務</h2>
+                    <select id="serviceSelect" name="service">
+                        {% for service in services %}
+                        <option>{{ service }}</option>
+                        {% endfor %}
+                    </select>
+                    <div id="parametersContainer"></div>
+                    <button type="button" id="addParamButton" class="btn btn-secondary mt-3"
+                        onclick="addParameter()">添加參數</button>
+                    <br>
+                    <button type="submit" class="btn btn-primary mt-3">提交分析</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="row report">
+            <div class="col-md-12">
+                <div class="report-header">
+                    <h2>分析報告</h2>
+                    <button id="downloadButton" class="btn btn-secondary mt-3" onclick="downloadReport()">下載報告</button>
+                </div>
+                <pre id="reportContent"></pre>
+            </div>
+        </div>
+    </div>
+    <div class="modal" tabindex="-1" role="dialog" id="loadingModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">提示</h5>
+                </div>
+                <div class="modal-body">
+                    <p>分析中請稍後...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引用 marked 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (typeof marked === 'undefined') {
+                console.error('marked library not loaded');
+            } else {
+                console.log('marked library loaded successfully');
+            }
+        });
+
+        function uploadFile(event) {
+            event.preventDefault();
+            const form = document.getElementById('uploadForm');
+            const data = new FormData(form);
+
+            const modal = document.getElementById('loadingModal');
+            modal.style.display = 'block';
+            document.querySelector("button[type='submit']").disabled = true;
+            document.querySelector("button").disabled = true;
+
+            fetch('/analyse_file', {
+                method: 'POST',
+                body: data,
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    const htmlContent = marked.parse(data); 
+                    document.getElementById('reportContent').innerHTML = htmlContent; 
+                })
+                .catch(error => console.error('Error:', error))
+                .finally(() => {
+                    modal.style.display = 'none';
+                    document.querySelector("button[type='submit']").disabled = false;
+                    document.querySelector("button").disabled = false;
+                });
+        }
+
+        function downloadReport() {
+            const reportContent = document.getElementById('reportContent').textContent;
+            const blob = new Blob([reportContent], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'report.md';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // service 和 paramOptions 是 python jinja2 的载入方式有報錯是正常的
+        var service = {{ services| tojson }};
+        var paramOptions = {{ parameters| tojson | safe }};
+        // console.log(paramOptions);
+        // 當選擇的輸入改變的時候將參數清除
+        document.getElementById('serviceSelect').addEventListener('change', function () {
+            document.getElementById('parametersContainer').innerHTML = '';
+        });
+
+        function addParameter() {
+            const serviceIndex = document.getElementById('serviceSelect').selectedIndex;
+            const params = paramOptions[serviceIndex] || [];
+            const container = document.getElementById('parametersContainer');
+            const paramDiv = document.createElement('div');
+            paramDiv.className = 'form-group';
+
+            const selectParam = document.createElement('select');
+            selectParam.name = 'paramName' + container.children.length;
+            selectParam.className = 'form-control mb-2';
+            selectParam.innerHTML = '<option value="">選擇參數</option>';
+            params.forEach(param => {
+                const option = document.createElement('option');
+                option.value = param[0];
+                option.textContent = param[0];
+                selectParam.appendChild(option);
+            });
+            paramDiv.appendChild(selectParam);
+
+            const selectValue = document.createElement('select');
+            selectValue.name = 'paramValue' + container.children.length;
+            selectValue.className = 'form-control mb-2 d-none';
+            selectParam.onchange = function () {
+                selectValue.innerHTML = '<option value="">選擇後綴</option>';
+                const selectedParam = params.find(p => p[0] === this.value);
+                if (!selectedParam) return;
+
+                if (selectedParam.length > 1) {
+                    selectValue.classList.remove('d-none');
+                    selectedParam.forEach((val, index) => {
+                        if (index === 0) return;
+                        const opt = document.createElement('option');
+                        opt.value = val;
+                        opt.textContent = val || '自定義後綴';
+                        selectValue.appendChild(opt);
+                    });
+                } else {
+                    selectValue.classList.add('d-none');
+                }
+            };
+            paramDiv.appendChild(selectValue);
+
+            const customInput = document.createElement('input');
+            customInput.name = 'customInput' + container.children.length;
+            customInput.type = 'text';
+            customInput.className = 'form-control d-none';
+            customInput.placeholder = '輸入自定義後綴';
+
+            selectValue.onchange = function () {
+                if (this.value == "null") {
+                    customInput.classList.remove('d-none');
+                } else {
+                    customInput.classList.add('d-none');
+                }
+            }
+            paramDiv.appendChild(customInput);
+
+            // Create a delete button
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = '刪除';
+            deleteButton.className = 'btn btn-danger mb-2 ml-2';
+            deleteButton.type = 'button';
+            deleteButton.onclick = function () {
+                container.removeChild(paramDiv);
+            };
+            paramDiv.appendChild(deleteButton);
+
+            container.appendChild(paramDiv);
+        }
+    </script>
+</body>
+
+</html>

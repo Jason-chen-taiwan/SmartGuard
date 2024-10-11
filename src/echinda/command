@@ -1,0 +1,36 @@
+-h,--help                Show this help text
+  --version                Show version
+  FILES                    Solidity files to analyze
+  --workers N              Number of workers to run
+  --server PORT            Run events server on the given port
+  --contract CONTRACT      Contract to analyze
+  --config CONFIG          Config file (command-line arguments override config
+                           options)
+  --format FORMAT          Output format. Either 'json', 'text', 'none'. All
+                           these disable interactive UI
+  --corpus-dir PATH        Directory to save and load corpus and coverage data.
+  --test-mode ARG          Test mode to use. Either 'property', 'assertion',
+                           'dapptest', 'optimization', 'overflow' or
+                           'exploration'
+  --all-contracts          Generate calls to all deployed contracts.
+  --timeout INTEGER        Timeout given in seconds.
+  --test-limit INTEGER     Number of sequences of transactions to generate
+                           during testing. Default is 50000
+  --rpc-block BLOCK        Block number to use when fetching over RPC.
+  --rpc-url URL            RPC URL to fetch contracts over.
+  --shrink-limit INTEGER   Number of tries to attempt to shrink a failing
+                           sequence of transactions. Default is 5000
+  --seq-len INTEGER        Number of transactions to generate during testing.
+                           Default is 100
+  --contract-addr ADDRESS  Address to deploy the contract to test. Default is
+                           0x00a329c0648769A73afAc7F9381E08FB43dBEA72
+  --deployer ADDRESS       Address of the deployer of the contract to test.
+                           Default is 0x0000000000000000000000000000000000030000
+  --sender ADDRESS         Addresses to use for the transactions sent during
+                           testing. Can be passed multiple times. Check the
+                           documentation to see the default values.
+  --seed SEED              Run with a specific seed.
+  --crytic-args ARGS       Additional arguments to use in crytic-compile for the
+                           compilation of the contract to test.
+  --solc-args ARGS         Additional arguments to use in solc for the
+                           compilation of the contract to test.

@@ -1,0 +1,10 @@
+certifi==2024.8.30
+cffi==1.17.1
+cryptography==43.0.1
+numpy==2.1.2
+openvino==2024.4.0
+openvino-telemetry==2024.1.0
+packaging==24.1
+pycparser==2.22
+TBB==0.2
+wheel @ file:///opt/homebrew/Cellar/python%403.12/3.12.7/libexec/wheel-0.44.0-py3-none-any.whl#sha256=c01326144883c50263d6967d1145640f3bbc8dfab32c2cbe817ef61d7a810219

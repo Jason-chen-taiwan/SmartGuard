@@ -1,0 +1,13 @@
+usage: analyzer.py [-h] -f FILE [-b] [-m MEMORY] [--initial_storage_file INITIAL_STORAGE_FILE] [-sf SAVEFILE] [-tt TAINTING_TYPE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f FILE, --file FILE  Code source file. Solidity by default. Use -b to process evm instead. Use stdin to read from stdin.
+  -b, --bytecode        read bytecode in source instead of solidity file.
+  -m MEMORY, --memory MEMORY
+                        Max memory limit
+  --initial_storage_file INITIAL_STORAGE_FILE
+                        initial storage file
+  -sf SAVEFILE, --savefile SAVEFILE
+  -tt TAINTING_TYPE, --tainting-type TAINTING_TYPE
+                        tainting type could be 'all' or 'storage'
